@@ -29,14 +29,16 @@ async function pendingCheck(client: AkairoClient) {
   const currentTime = new Date(Date.now());
 
   pendingArray.forEach(async (message) => {
-    if (message.postTime.getTime() <= currentTime.getTime())
-      postFood(message.messageID);
+    if (message.postTime.getTime() <= currentTime.getTime()) {
+      console.log("Executing pending chech on ", message.messageID);
+      postFood(message.messageID, client);
+    }
   });
 }
 
-async function postFood(messageID: string) {
+async function postFood(messageID: string, client: AkairoClient) {
   let FoodSubs = <TextChannel>(
-    this.client.channels.cache.get(config.channels.submissions)
+    client.channels.cache.get(config.channels.submissions)
   );
   let message: Message;
   try {

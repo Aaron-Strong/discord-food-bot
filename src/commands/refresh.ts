@@ -3,13 +3,14 @@ import { Message } from "discord.js";
 
 class IntervalCommand extends Command {
   constructor() {
-    super("interval", {
-      aliases: ["interval"],
+    super("refresh", {
+      aliases: ["refresh"],
       category: "util",
       description: {
-        content: "Displays the time till food_submissions is refreshed",
+        content:
+          "Manually checks if food has been in food_submissions too long",
         usage: "",
-        example: ["interval"],
+        example: ["refresh"],
       },
     });
   }
@@ -18,8 +19,9 @@ class IntervalCommand extends Command {
     let intervalTimerInMinutes = Math.round(
       this.client.pendingChecker.next() / 1000 / 60
     );
+    this.client.pendingChecker.exec();
     return message.util.reply(
-      `Next refresh in ${intervalTimerInMinutes} minutes!`
+      `Manually Refreshed 👍🏿 Next refresh in ${intervalTimerInMinutes} minutes!`
     );
   }
 }
