@@ -19,7 +19,7 @@ class ReadyListener extends Listener {
     console.log("I'm ready!");
     console.log(`Logged in as ${this.client.user.tag}!`);
     this.client.user.setActivity("Busy downvoting your crap food...");
-    this.client.pendingChecker = doSomething(pendingCheck);
+    this.client.pendingChecker = doSomething(() => pendingCheck(this.client));
   }
 }
 
