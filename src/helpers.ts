@@ -12,6 +12,7 @@ export const doSomething = (something: Function) => {
       return running ? nextCheck() : -1;
     },
     exec() {
+      console.log("doing something uwu...");
       something();
     },
     stop() {
