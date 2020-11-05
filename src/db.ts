@@ -127,6 +127,6 @@ export async function pendingDelete(messageID: string) {
   const collection = foodDB.collection(COLLECTIONS.PENDING);
   const query = { messageID: messageID };
   const result = await collection.deleteMany(query);
-  console.log(result.deletedCount);
+  console.log(`Deleted ${result.deletedCount} posts from pending collection`);
   await mongo.close();
 }

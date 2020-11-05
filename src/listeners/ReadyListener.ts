@@ -31,8 +31,11 @@ async function pendingCheck(client: AkairoClient) {
 
   pendingArray.forEach(async (message) => {
     if (message.postTime.getTime() <= currentTime.getTime()) {
-      console.log("Executing pending chech on ", message.messageID);
-      postFood(message.messageID, client);
+      console.log(
+        "Attempting to post message from PENDING with ID: ",
+        message.messageID
+      );
+      await postFood(message.messageID, client);
     }
   });
 }
@@ -50,7 +53,10 @@ async function postFood(messageID: string, client: AkairoClient) {
       return;
     }
   }
-  if (message == null) return;
+  if (message == null) {
+    console.log(`Message with ID of ${messageID} not found`);
+    return;
+  }
   const foodPornChannel = <TextChannel>(
     message.guild.channels.cache.get(config.channels.porn)
   );
