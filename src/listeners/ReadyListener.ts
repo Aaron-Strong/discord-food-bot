@@ -57,6 +57,7 @@ async function postFood(messageID: string, client: AkairoClient) {
     console.log(`Message with ID of ${messageID} not found`);
     return;
   }
+
   const foodPornChannel = <TextChannel>(
     message.guild.channels.cache.get(config.channels.porn)
   );
@@ -84,12 +85,11 @@ async function postFood(messageID: string, client: AkairoClient) {
     url = cacheChannel.lastMessage.attachments.first().url;
   } else {
     const urls = message.content.match(/\bhttps?:\/\/\S+/gi);
-    if (!url) {
+    if (!urls) {
       return;
     }
     url = urls[0];
   }
-
   if (url === "") {
     return;
   }
