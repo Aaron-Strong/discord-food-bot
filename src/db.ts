@@ -36,7 +36,6 @@ export async function findFood(foodType: FOODTYPE, userID?: string) {
     let foodCursor = foodCollection.find(query);
     foodArray = foodArray.concat(await foodCursor.toArray());
     foodArray.sort((a, b) => {
-      ``;
       return b.downvotes - a.downvotes;
     });
   }
