@@ -1,30 +1,30 @@
-import { AkairoClient } from "discord-akairo";
-import { Listener } from "discord-akairo";
-import { Message } from "discord.js";
-import { TextChannel } from "discord.js";
-import { ObjectID } from "mongodb";
-import { config } from "../config";
-import { findAllPending, insert, pendingDelete } from "../db";
-import { doSomething } from "../helpers";
+import { AkairoClient } from 'discord-akairo';
+import { Listener } from 'discord-akairo';
+import { Message } from 'discord.js';
+import { TextChannel } from 'discord.js';
+import { ObjectID } from 'mongodb';
+import { config } from '../config';
+import { findAllPending, insert, pendingDelete } from '../db';
+import { doSomething } from '../helpers';
 
 class ReadyListener extends Listener {
   constructor() {
-    super("ready", {
-      emitter: "client",
-      event: "ready",
+    super('ready', {
+      emitter: 'client',
+      event: 'ready',
     });
   }
 
   async exec() {
     console.log("I'm ready!");
     console.log(`Logged in as ${this.client.user.tag}!`);
-    this.client.user.setActivity("Busy downvoting your crap food...");
+    this.client.user.setActivity('Busy downvoting your crap food...');
     this.client.pendingChecker = doSomething(() => pendingCheck(this.client));
   }
 }
 
 async function pendingCheck(client: AkairoClient) {
-  console.log("Pending check running...");
+  console.log('Pending check running...');
   const pendingArray = await findAllPending();
   if (pendingArray.length === 0) return;
   const currentTime = new Date(Date.now());
@@ -32,7 +32,7 @@ async function pendingCheck(client: AkairoClient) {
   pendingArray.forEach(async (message) => {
     if (message.postTime.getTime() <= currentTime.getTime()) {
       console.log(
-        "Attempting to post message from PENDING with ID: ",
+        'Attempting to post message from PENDING with ID: ',
         message.messageID
       );
       await postFood(message.messageID, client);
@@ -49,7 +49,7 @@ async function postFood(messageID: string, client: AkairoClient) {
     message = await FoodSubs.messages.fetch(messageID);
   } catch (error) {
     if (error.code == 10008) {
-      console.error("Some twat deleted his foodpost");
+      console.error('Some twat deleted his foodpost');
       await pendingDelete(messageID);
       return;
     }
@@ -71,17 +71,24 @@ async function postFood(messageID: string, client: AkairoClient) {
     message.guild.channels.cache.get(config.channels.cache)
   );
 
-  const upvotes = message.reactions.cache
-    .filter((a) => a.emoji.name == "👍🏿")
+  const oldUpvotes = message.reactions.cache
+    .filter((a) => a.emoji.name == '👍🏿')
     .map((reaction) => reaction.count)[0];
-  const downvotes = message.reactions.cache
-    .filter((a) => a.emoji.name == "👎🏿")
+  const oldDownvotes = message.reactions.cache
+    .filter((a) => a.emoji.name == '👎🏿')
     .map((reaction) => reaction.count)[0];
+
+  const upvotes = message.reactions.resolve('👍🏿').count;
+  const downvotes = message.reactions.resolve('👎🏿').count;
+  console.log('old vs new upvotes', `${oldUpvotes} : ${upvotes}`);
+  //console.log(oldUpvotes + ':' + upvotes);
+  console.log('old vs new downvotes', `${oldDownvotes} : ${downvotes}`);
+  //console.log(oldDownvotes + ':' + downvotes);
 
   let targetChannel: TextChannel;
   if (upvotes > downvotes) targetChannel = foodPornChannel;
   else targetChannel = foodHellChannel;
-  let url: string = "";
+  let url: string = '';
   if (message.attachments.size != 0) {
     await cacheChannel.send(message.attachments.first());
     url = cacheChannel.lastMessage.attachments.first().url;
@@ -92,7 +99,7 @@ async function postFood(messageID: string, client: AkairoClient) {
     }
     url = urls[0];
   }
-  if (url === "") {
+  if (url === '') {
     return;
   }
   let embed = {
@@ -108,7 +115,7 @@ async function postFood(messageID: string, client: AkairoClient) {
       fields: [
         {
           name:
-            upvotes > downvotes ? "🥳 Foodporn Poggers!" : "💩 Shitty Food 💩",
+            upvotes > downvotes ? '🥳 Foodporn Poggers!' : '💩 Shitty Food 💩',
           value: `Post received 👍🏿 x ${upvotes - 1}, 👎🏿 x ${downvotes - 1}`,
           inline: false,
         },

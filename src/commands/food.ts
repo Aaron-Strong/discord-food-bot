@@ -1,9 +1,7 @@
 import { AkairoClient, Command } from "discord-akairo";
 import { Message } from "discord.js";
-import { TextChannel } from "discord.js";
-import { ObjectID } from "mongodb";
 import { config } from "../config";
-import { insert, insertPending } from "../db";
+import { insertPending } from "../db";
 class FoodCommand extends Command {
   client: AkairoClient;
 
