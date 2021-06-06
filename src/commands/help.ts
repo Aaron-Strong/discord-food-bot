@@ -2,7 +2,7 @@ import { Category } from 'discord-akairo';
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
 import { MessageEmbed } from 'discord.js';
-import { config } from '../config.dev';
+import { config } from '../config';
 const ignoredCategories = ['owner', 'default', 'auto'];
 
 interface UwUCommand extends Command {

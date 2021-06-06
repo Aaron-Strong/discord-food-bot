@@ -3,7 +3,7 @@ import { Message } from 'discord.js';
 import { TextChannel } from 'discord.js';
 import { User } from 'discord.js';
 import { ObjectID } from 'mongodb';
-import { config } from '../config.dev';
+import { config } from '../config';
 import { guildInit, insert } from '../db';
 import { guildSettings } from '../typings';
 interface Args {

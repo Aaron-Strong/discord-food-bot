@@ -1,6 +1,6 @@
 import { AkairoClient, CommandHandler, ListenerHandler } from 'discord-akairo';
 //import mongoose from "mongoose";
-import { config } from './config.dev';
+import { config } from './config';
 import { pendingChecker } from './typings';
 //import * as foodModel from "./db";
 class MyClient extends AkairoClient {

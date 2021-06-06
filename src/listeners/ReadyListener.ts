@@ -3,7 +3,7 @@ import { Listener } from 'discord-akairo';
 import { Message } from 'discord.js';
 import { TextChannel } from 'discord.js';
 import { ObjectID } from 'mongodb';
-import { config } from '../config.dev';
+import { config } from '../config';
 import { findAllPending, findGuild, insert, pendingDelete } from '../db';
 import { recursion } from '../Helpers/Recursion';
 import { postFood } from '../Helpers/PostFood';

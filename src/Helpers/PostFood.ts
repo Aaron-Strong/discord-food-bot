@@ -3,7 +3,7 @@ import { Message } from 'discord.js';
 import { TextChannel } from 'discord.js';
 import { ObjectID } from 'mongodb';
 import { uploadFood } from '../Azure/blobs';
-import { config } from '../config.dev';
+import { config } from '../config';
 import { insert, pendingDelete } from '../db';
 import { guildSettings } from '../typings';
 

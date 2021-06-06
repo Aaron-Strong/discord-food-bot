@@ -1,7 +1,7 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { BufferResolvable, MessageAttachment } from 'discord.js';
 import { v1 as uuidv1 } from 'uuid';
-import { config } from '../config.dev';
+import { config } from '../config';
 import intoStream from 'into-stream';
 import internal, { Stream } from 'stream';
 

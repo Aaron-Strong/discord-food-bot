@@ -1,6 +1,6 @@
 import { AkairoClient, Command } from 'discord-akairo';
 import { Message } from 'discord.js';
-import { config } from '../config.dev';
+import { config } from '../config';
 import { findGuild, insertPending } from '../db';
 class FoodCommand extends Command {
   client: AkairoClient;

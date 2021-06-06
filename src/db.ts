@@ -1,7 +1,7 @@
 import { AkairoClient } from 'discord-akairo';
 import { User } from 'discord.js';
 import { MongoClient } from 'mongodb';
-import { config } from './config.dev';
+import { config } from './config';
 import { COLLECTIONS, DBNAME, FOODTYPE } from './enums';
 import { foodObject, pendingFood, guildSettings } from './typings';
 
