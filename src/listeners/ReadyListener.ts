@@ -3,9 +3,10 @@ import { Listener } from 'discord-akairo';
 import { Message } from 'discord.js';
 import { TextChannel } from 'discord.js';
 import { ObjectID } from 'mongodb';
-import { config } from '../config';
-import { findAllPending, insert, pendingDelete } from '../db';
-import { doSomething } from '../helpers';
+import { config } from '../config.dev';
+import { findAllPending, findGuild, insert, pendingDelete } from '../db';
+import { recursion } from '../Helpers/Recursion';
+import { postFood } from '../Helpers/PostFood';
 
 class ReadyListener extends Listener {
   constructor() {
@@ -19,7 +20,7 @@ class ReadyListener extends Listener {
     console.log("I'm ready!");
     console.log(`Logged in as ${this.client.user.tag}!`);
     this.client.user.setActivity('Busy downvoting your crap food...');
-    this.client.pendingChecker = doSomething(() => pendingCheck(this.client));
+    this.client.pendingChecker = recursion(() => pendingCheck(this.client));
   }
 }
 
@@ -35,107 +36,10 @@ async function pendingCheck(client: AkairoClient) {
         'Attempting to post message from PENDING with ID: ',
         message.messageID
       );
-      await postFood(message.messageID, client);
+      const guildSettings = await findGuild(message.guildID);
+      await postFood(message.messageID, client, guildSettings);
     }
   });
-}
-
-async function postFood(messageID: string, client: AkairoClient) {
-  let FoodSubs = <TextChannel>(
-    client.channels.cache.get(config.channels.submissions)
-  );
-  let message: Message;
-  try {
-    message = await FoodSubs.messages.fetch(messageID);
-  } catch (error) {
-    if (error.code == 10008) {
-      console.error('Some twat deleted his foodpost');
-      await pendingDelete(messageID);
-      return;
-    }
-  }
-  if (message == null) {
-    console.log(`Message with ID of ${messageID} not found`);
-    await pendingDelete(messageID);
-    return;
-  }
-
-  const foodPornChannel = <TextChannel>(
-    message.guild.channels.cache.get(config.channels.porn)
-  );
-  const foodHellChannel = <TextChannel>(
-    message.guild.channels.cache.get(config.channels.hell)
-  );
-
-  const cacheChannel = <TextChannel>(
-    message.guild.channels.cache.get(config.channels.cache)
-  );
-
-  const oldUpvotes = message.reactions.cache
-    .filter((a) => a.emoji.name == '👍🏿')
-    .map((reaction) => reaction.count)[0];
-  const oldDownvotes = message.reactions.cache
-    .filter((a) => a.emoji.name == '👎🏿')
-    .map((reaction) => reaction.count)[0];
-
-  const upvotes = message.reactions.resolve('👍🏿').count;
-  const downvotes = message.reactions.resolve('👎🏿').count;
-  console.log('old vs new upvotes', `${oldUpvotes} : ${upvotes}`);
-  //console.log(oldUpvotes + ':' + upvotes);
-  console.log('old vs new downvotes', `${oldDownvotes} : ${downvotes}`);
-  //console.log(oldDownvotes + ':' + downvotes);
-
-  let targetChannel: TextChannel;
-  if (upvotes > downvotes) targetChannel = foodPornChannel;
-  else targetChannel = foodHellChannel;
-  let url: string = '';
-  if (message.attachments.size != 0) {
-    await cacheChannel.send(message.attachments.first());
-    url = cacheChannel.lastMessage.attachments.first().url;
-  } else {
-    const urls = message.content.match(/\bhttps?:\/\/\S+/gi);
-    if (!urls) {
-      return;
-    }
-    url = urls[0];
-  }
-  if (url === '') {
-    return;
-  }
-  let embed = {
-    embed: {
-      color: 1925289,
-      image: {
-        url: url,
-      },
-      author: {
-        name: message.author.username,
-        icon_url: message.author.avatarURL(),
-      },
-      fields: [
-        {
-          name:
-            upvotes > downvotes ? '🥳 Foodporn Poggers!' : '💩 Shitty Food 💩',
-          value: `Post received 👍🏿 x ${upvotes - 1}, 👎🏿 x ${downvotes - 1}`,
-          inline: false,
-        },
-      ],
-    },
-  };
-
-  let postedFoodMessage = await targetChannel.send(embed);
-  await insert({
-    url: url,
-    upvotes: upvotes,
-    downvotes: downvotes,
-    userID: message.author.id,
-    discordInline: postedFoodMessage.url,
-    username: message.author.username,
-    _id: new ObjectID(),
-  });
-  console.log(url);
-  await pendingDelete(messageID);
-  return await message.delete();
 }
 
 module.exports = ReadyListener;

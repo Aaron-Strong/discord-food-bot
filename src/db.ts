@@ -1,24 +1,24 @@
-import { AkairoClient } from "discord-akairo";
-import { User } from "discord.js";
-import { MongoClient } from "mongodb";
-import { config } from "./config";
-import { COLLECTIONS, DBNAME, FOODTYPE } from "./enums";
-import { foodObject, pendingFood } from "./typings";
+import { AkairoClient } from 'discord-akairo';
+import { User } from 'discord.js';
+import { MongoClient } from 'mongodb';
+import { config } from './config.dev';
+import { COLLECTIONS, DBNAME, FOODTYPE } from './enums';
+import { foodObject, pendingFood, guildSettings } from './typings';
 
 export async function insert(foodObject: foodObject) {
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected");
+  console.log('Mongo Connected');
 
-  const foodDB = mongo.db("food");
+  const foodDB = mongo.db('food');
   foodObject.upvotes -= 1;
   foodObject.downvotes -= 1;
   const collection =
     foodObject.upvotes > foodObject.downvotes
-      ? foodDB.collection("foodPorn")
-      : foodDB.collection("foodHell");
+      ? foodDB.collection('foodPorn')
+      : foodDB.collection('foodHell');
   await collection.insertOne(foodObject);
 
-  console.log("Added a new foodObject to " + collection.collectionName);
+  console.log('Added a new foodObject to ' + collection.collectionName);
   await mongo.close();
 }
 
@@ -26,12 +26,12 @@ export async function insert(foodObject: foodObject) {
 export async function findFood(foodType: FOODTYPE, userID?: string) {
   let foodArray: foodObject[] = [];
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected - Find Food");
+  console.log('Mongo Connected - Find Food');
   const foodDB = mongo.db(DBNAME.FOOD);
   let query = userID ? { userID: userID } : {};
-  console.log("MONGO FOODTYPE", foodType);
+  console.log('MONGO FOODTYPE', foodType);
   if (foodType == FOODTYPE.HELL || foodType === FOODTYPE.ALL) {
-    console.log("TRYING TO QUERY FOODHELL");
+    console.log('TRYING TO QUERY FOODHELL');
     let foodCollection = foodDB.collection(COLLECTIONS.HELL);
     let foodCursor = foodCollection.find(query);
     foodArray = foodArray.concat(await foodCursor.toArray());
@@ -41,7 +41,7 @@ export async function findFood(foodType: FOODTYPE, userID?: string) {
   }
 
   if (foodType == FOODTYPE.PORN || foodType === FOODTYPE.ALL) {
-    console.log("TRYING TO QUERY FOODPORN");
+    console.log('TRYING TO QUERY FOODPORN');
     let foodCollection = foodDB.collection(COLLECTIONS.PORN);
     let foodCursor = foodCollection.find(query);
     foodArray = foodArray.concat(await foodCursor.toArray());
@@ -50,7 +50,7 @@ export async function findFood(foodType: FOODTYPE, userID?: string) {
     });
   }
   foodArray.forEach((food) => {
-    console.log("FOOD:", food.url);
+    console.log('FOOD:', food.url);
   });
   await mongo.close();
   //if (foodArray.length === 0) return foodArray;
@@ -63,9 +63,9 @@ export async function findFood(foodType: FOODTYPE, userID?: string) {
 
 export async function foodExists(collectionName: COLLECTIONS, url: string) {
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected - Food Exists");
+  console.log('Mongo Connected - Food Exists');
 
-  const foodDB = mongo.db("food");
+  const foodDB = mongo.db('food');
   const collection = foodDB.collection(collectionName);
   const query = { url: url };
   let cursor = collection.find(query);
@@ -73,7 +73,7 @@ export async function foodExists(collectionName: COLLECTIONS, url: string) {
   foodArr = await cursor.toArray();
   await mongo.close();
   if (foodArr.length === 0) return false;
-  console.log("FoodExist returned true:", foodArr);
+  console.log('FoodExist returned true:', foodArr);
   return true;
 }
 
@@ -82,35 +82,36 @@ export async function AddUsername(
   food: foodObject
 ) {
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected - Add Username");
+  console.log('Mongo Connected - Add Username');
 
-  const foodDB = mongo.db("food");
+  const foodDB = mongo.db('food');
   const collection = foodDB.collection(collectionName);
   const query = { _id: food._id };
   await collection.updateOne(query, { $set: { username: food.username } });
   await mongo.close();
 }
 
-export async function insertPending(messageID: string) {
+export async function insertPending(messageID: string, guildID: string) {
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected - Add Pending");
+  console.log('Mongo Connected - Add Pending');
   const postTime = new Date(Date.now());
   postTime.setMinutes(postTime.getMinutes() + config.voteTimeInMinutes); // Add x amount of minutes to the postTime so we give users time to vote
   const pendingFood: pendingFood = {
     messageID: messageID,
     postTime: postTime,
+    guildID: guildID,
   };
 
-  const foodDB = mongo.db("food");
+  const foodDB = mongo.db('food');
   const collection = foodDB.collection(COLLECTIONS.PENDING);
   await collection.insertOne(pendingFood);
   await mongo.close();
 }
 
 export async function findAllPending() {
+  console.log('Mongo Connected - Find All Pending');
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected - Find All Pending");
-  const foodDB = mongo.db("food");
+  const foodDB = mongo.db('food');
   const collection = foodDB.collection(COLLECTIONS.PENDING);
 
   const cursor = collection.find();
@@ -121,11 +122,33 @@ export async function findAllPending() {
 
 export async function pendingDelete(messageID: string) {
   const mongo = await MongoClient.connect(config.mongo_url);
-  console.log("Mongo Connected - Delete Pending");
-  const foodDB = mongo.db("food");
+  console.log('Mongo Connected - Delete Pending');
+  const foodDB = mongo.db('food');
   const collection = foodDB.collection(COLLECTIONS.PENDING);
   const query = { messageID: messageID };
   const result = await collection.deleteMany(query);
   console.log(`Deleted ${result.deletedCount} posts from pending collection`);
   await mongo.close();
+}
+
+export async function guildInit(guildSettings: guildSettings) {
+  const mongo = await MongoClient.connect(config.mongo_url);
+  console.log('Mongo Connected - Init Guild');
+  const foodDB = mongo.db('food');
+  const collection = foodDB.collection(COLLECTIONS.GUILDS);
+  await collection.insertOne(guildSettings);
+  console.log(`Added ${guildSettings.guildID} to the guild db`);
+  await mongo.close();
+}
+
+export async function findGuild(guildID: string): Promise<guildSettings> {
+  const mongo = await MongoClient.connect(config.mongo_url);
+  console.log('Mongo Connected - Finding Guild');
+  const foodDB = mongo.db('food');
+  const collection = foodDB.collection(COLLECTIONS.GUILDS);
+  const query = { guildID: guildID };
+  const guild: guildSettings = await collection.findOne(query);
+  await mongo.close();
+
+  return guild;
 }

@@ -1,10 +1,9 @@
-import { Category } from "discord-akairo";
-import { Command } from "discord-akairo";
-import { Message } from "discord.js";
-import { MessageEmbed } from "discord.js";
-import { config } from "../config";
-const ignoredCategories = ["owner", "default", "auto"];
-
+import { Category } from 'discord-akairo';
+import { Command } from 'discord-akairo';
+import { Message } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
+import { config } from '../config.dev';
+const ignoredCategories = ['owner', 'default', 'auto'];
 
 interface UwUCommand extends Command {
   description: {
@@ -16,20 +15,20 @@ interface UwUCommand extends Command {
 
 export default class Help extends Command {
   public constructor() {
-    super("help", {
-      aliases: ["help", "h"],
+    super('help', {
+      aliases: ['help', 'h'],
       args: [
         {
-          id: "command",
-          type: "commandAlias",
+          id: 'command',
+          type: 'commandAlias',
           default: null,
         },
       ],
-      category: "utilities",
+      category: 'utilities',
       description: {
-        content: "Displays information about a command",
-        usage: "[command]",
-        example: ["help manual"],
+        content: 'Displays information about a command',
+        usage: '[command]',
+        example: ['help manual'],
       },
     });
   }
@@ -41,30 +40,30 @@ export default class Help extends Command {
     if (command) {
       embed
         .addField(
-          "❯ Description",
-          command.description.content || "No Description provided"
+          '❯ Description',
+          command.description.content || 'No Description provided'
         )
         .addField(
-          "❯ Usage",
+          '❯ Usage',
           `\`${prefix}${command.aliases[0]}${
-            command.description.usage ? command.description.usage : ""
+            command.description.usage ? command.description.usage : ''
           }\``
         )
         .addField(
-          "❯ Examples",
-          command.description.example.map((x) => `\`${prefix}${x}\``).join("\n")
+          '❯ Examples',
+          command.description.example.map((x) => `\`${prefix}${x}\``).join('\n')
         );
       if (command.aliases.length > 1) {
         embed.addField(
-          "❯ Aliases",
+          '❯ Aliases',
           `\`${command.aliases
             .filter((x: string) => x !== command.id)
-            .join("`, `")}\``
+            .join('`, `')}\``
         );
       }
       return message.channel.send(embed);
     }
-    embed.setTitle("Commands").setDescription(
+    embed.setTitle('Commands').setDescription(
       `
 					A list of available commands.
                     For additional info on a command, type \`${prefix}help [command]\`
@@ -85,7 +84,7 @@ export default class Help extends Command {
         `${category
           .filter((cmd) => cmd.aliases.length > 0)
           .map((cmd) => `\`${cmd.aliases[0]}\``)
-          .join(", ")}`
+          .join(', ')}`
       );
     }
 

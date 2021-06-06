@@ -1,10 +1,10 @@
-import { Command } from "discord-akairo";
-import { Message } from "discord.js";
-import { TextChannel } from "discord.js";
-import { User } from "discord.js";
-import { ObjectID } from "mongodb";
-import { config } from "../config";
-import { insert } from "../db";
+import { Command } from 'discord-akairo';
+import { Message } from 'discord.js';
+import { TextChannel } from 'discord.js';
+import { User } from 'discord.js';
+import { ObjectID } from 'mongodb';
+import { config } from '../config.dev';
+import { findGuild, insert } from '../db';
 interface Args {
   url: string;
   user: User;
@@ -13,39 +13,46 @@ interface Args {
 }
 class ManualCommand extends Command {
   constructor() {
-    super("man", {
-      aliases: ["manual", "man"],
-      category: "food",
+    super('man', {
+      aliases: ['manual', 'man'],
+      category: 'food',
       args: [
         {
-          id: "url",
-          type: "string",
+          id: 'url',
+          type: 'string',
         },
         {
-          id: "user",
-          type: "user",
+          id: 'user',
+          type: 'user',
         },
         {
-          id: "upvotes",
-          type: "number",
+          id: 'upvotes',
+          type: 'number',
         },
         {
-          id: "downvotes",
-          type: "number",
+          id: 'downvotes',
+          type: 'number',
         },
       ],
       description: {
-        content: "Makes a manual food post from the bot",
-        usage: "<image_url> <user_to_post_as> <upvotes> <downvotes>",
-        example: ["man https://i.imgur.com/oqvXUGe.png mehdi 1 9"],
+        content: 'Makes a manual food post from the bot',
+        usage: '<image_url> <user_to_post_as> <upvotes> <downvotes>',
+        example: ['man https://i.imgur.com/oqvXUGe.png mehdi 1 9'],
       },
     });
   }
 
   async exec(message: Message, args: Args) {
     if (!config.admins.includes(message.author.id)) {
-      return message.util.reply("yy nice try");
+      return message.util.reply('yy nice try');
     }
+
+    const guildSettings = await findGuild(message.guild.id);
+
+    if (!args.user) {
+      return message.util.reply('Member not found');
+    }
+
     let embed = {
       embed: {
         color: 1925289,
@@ -60,8 +67,8 @@ class ManualCommand extends Command {
           {
             name:
               args.upvotes > args.downvotes
-                ? "🥳 Foodporn Poggers!"
-                : "💩 Shitty Food 💩",
+                ? '🥳 Foodporn Poggers!'
+                : '💩 Shitty Food 💩',
             value: `Post received 👍🏿 x ${args.upvotes}, 👎🏿 x ${args.downvotes}`,
             //value: `Post received 👍🏿 x 0, 👎🏿 x 7`,
             inline: false,
@@ -71,15 +78,16 @@ class ManualCommand extends Command {
     };
 
     const foodPornChannel = <TextChannel>(
-      message.guild.channels.cache.get(config.channels.porn)
+      message.guild.channels.cache.get(guildSettings.pornID)
     );
     const foodHellChannel = <TextChannel>(
-      message.guild.channels.cache.get(config.channels.hell)
+      message.guild.channels.cache.get(guildSettings.hellID)
     );
     let targetChannel: TextChannel;
     if (args.upvotes > args.downvotes) targetChannel = foodPornChannel;
     else targetChannel = foodHellChannel;
     let postedFoodMessage = await targetChannel.send(embed);
+
     await insert({
       url: args.url,
       upvotes: args.upvotes + 1,
@@ -87,10 +95,11 @@ class ManualCommand extends Command {
       userID: args.user.id,
       discordInline: postedFoodMessage.url,
       username: args.user.username,
+      guildID: message.guild.id,
       _id: new ObjectID(),
     });
     console.log(args.url);
-    return message.util.reply("Manually added some food");
+    return message.util.reply('Manually added some food');
   }
 }
 

@@ -1,18 +1,23 @@
-import { AkairoClient, Command } from "discord-akairo";
-import { Message } from "discord.js";
-import { config } from "../config";
-import { insertPending } from "../db";
+import { AkairoClient, Command } from 'discord-akairo';
+import { Message } from 'discord.js';
+import { config } from '../config.dev';
+import { findGuild, insertPending } from '../db';
 class FoodCommand extends Command {
   client: AkairoClient;
 
   constructor() {
-    super("foodscan", {
-      category: "auto",
+    super('foodscan', {
+      category: 'auto',
     });
   }
 
   condition(message: Message) {
-    if (message.channel.id !== config.channels.submissions) {
+    return true;
+  }
+
+  async exec(message: Message) {
+    const guildSettings = await findGuild(message.guild.id);
+    if (message.channel.id !== guildSettings.submissionID) {
       return false;
     }
     let isImage =
@@ -26,14 +31,11 @@ class FoodCommand extends Command {
       message.delete();
       return false;
     }
-    return true;
-  }
 
-  async exec(message: Message) {
-    await message.react("👍🏿");
-    await message.react("👎🏿");
+    await message.react('👍🏿');
+    await message.react('👎🏿');
 
-    await insertPending(message.id);
+    await insertPending(message.id, message.guild.id);
   }
 }
 
