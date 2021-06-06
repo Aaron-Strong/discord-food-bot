@@ -1,8 +1,6 @@
-import { ObjectID } from "mongodb";
-import { nextTick } from "process";
-import { doSomething } from "./helpers";
+import { ObjectID } from 'mongodb';
 
-declare module "discord-akairo" {
+declare module 'discord-akairo' {
   interface AkairoClient {
     commandHandler: CommandHandler;
     listenerHandler: ListenerHandler;
@@ -24,9 +22,19 @@ export interface foodObject {
   discordInline: string;
   username: string;
   index?: number;
+  guildID: string;
   _id: ObjectID;
 }
 export interface pendingFood {
   messageID: string;
+  guildID: string;
   postTime: Date;
+}
+export interface guildSettings {
+  _id: ObjectID;
+  prefix: string;
+  guildID: string;
+  submissionID: string;
+  pornID: string;
+  hellID: string;
 }
