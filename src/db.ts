@@ -23,12 +23,18 @@ export async function insert(foodObject: foodObject) {
 }
 
 // Find Logic For Mongo Food DB
-export async function findFood(foodType: FOODTYPE, userID?: string) {
+export async function findFood(
+  foodType: FOODTYPE,
+  guildID: string,
+  userID?: string
+) {
   let foodArray: foodObject[] = [];
   const mongo = await MongoClient.connect(config.mongo_url);
   console.log('Mongo Connected - Find Food');
   const foodDB = mongo.db(DBNAME.FOOD);
-  let query = userID ? { userID: userID } : {};
+  let query = userID
+    ? { userID: userID, guildID: guildID }
+    : { guildID: guildID };
   console.log('MONGO FOODTYPE', foodType);
   if (foodType == FOODTYPE.HELL || foodType === FOODTYPE.ALL) {
     console.log('TRYING TO QUERY FOODHELL');
