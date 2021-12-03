@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/d406a3b6-e380-49b8-a2f5-dd7f1bf11362/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/discord-food-bot",
+    "appService.deploySubpath": "."
+}

@@ -2,6 +2,7 @@ import { AkairoClient, CommandHandler, ListenerHandler } from 'discord-akairo';
 //import mongoose from "mongoose";
 import { config } from './config';
 import { pendingChecker } from './typings';
+import * as http from 'http';
 //import * as foodModel from "./db";
 class MyClient extends AkairoClient {
   commandHandler: CommandHandler;
@@ -36,3 +37,15 @@ class MyClient extends AkairoClient {
 const client = new MyClient();
 console.log(config.token);
 client.login(config.token);
+
+
+
+const server = http.createServer((request, response) => {
+    response.writeHead(200, {"Content-Type": "text/plain"});
+    response.end("Hello World!");
+});
+
+const port = process.env.PORT || 1337;
+server.listen(port);
+
+console.log("Ping server running at http://localhost:%d", port);
