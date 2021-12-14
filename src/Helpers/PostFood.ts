@@ -1,10 +1,10 @@
 import { AkairoClient } from 'discord-akairo';
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import { TextChannel } from 'discord.js';
 import { ObjectID } from 'mongodb';
 import { uploadFood } from '../Azure/blobs';
 import { config } from '../config';
-import { insert, pendingDelete } from '../db';
+import { getPendingVoters, insert, pendingDelete } from '../db';
 import { guildSettings } from '../typings';
 
 export async function postFood(
@@ -40,23 +40,17 @@ export async function postFood(
     message.guild.channels.cache.get(guildSettings.hellID)
   );
 
-  const oldUpvotes = message.reactions.cache
-    .filter((a) => a.emoji.name == '👍🏿')
-    .map((reaction) => reaction.count)[0];
-  const oldDownvotes = message.reactions.cache
-    .filter((a) => a.emoji.name == '👎🏿')
-    .map((reaction) => reaction.count)[0];
-
-  const upvotes = message.reactions.resolve('👍🏿').count;
-  const downvotes = message.reactions.resolve('👎🏿').count;
-  console.log('old vs new upvotes', `${oldUpvotes} : ${upvotes}`);
-  //console.log(oldUpvotes + ':' + upvotes);
-  console.log('old vs new downvotes', `${oldDownvotes} : ${downvotes}`);
-  //console.log(oldDownvotes + ':' + downvotes);
-
   let targetChannel: TextChannel;
-  if (upvotes > downvotes) targetChannel = foodPornChannel;
-  else targetChannel = foodHellChannel;
+
+  let votes = await getPendingVoters(messageID);
+  let votesAverage = ((votes.reduce((a, b) => a + b.vote, 0) / votes.length).toPrecision(2) || 0) as number;
+  let poggers = false;
+  if(votesAverage >= 3.5) { 
+    poggers = true;
+    targetChannel = foodPornChannel; 
+  }
+  else 
+    targetChannel = foodHellChannel;
   let url: string = '';
   if (message.attachments.size != 0) {
     url = await uploadFood(message.attachments.first());
@@ -70,32 +64,32 @@ export async function postFood(
   if (url === '') {
     return;
   }
+
   let embed = {
-    embed: {
-      color: 1925289,
-      image: {
-        url: url,
-      },
-      author: {
-        name: message.author.username,
-        icon_url: message.author.avatarURL(),
-      },
-      fields: [
-        {
-          name:
-            upvotes > downvotes ? '🥳 Foodporn Poggers!' : '💩 Shitty Food 💩',
-          value: `Post received 👍🏿 x ${upvotes - 1}, 👎🏿 x ${downvotes - 1}`,
-          inline: false,
-        },
-      ],
+    color: 1925289,
+    image: {
+      url: url,
     },
+    author: {
+      name: message.author.username,
+      icon_url: message.author.avatarURL(),
+    },
+    fields: [
+      {
+        name:
+        poggers ? '🥳 Foodporn Poggers!' : '💩 Shitty Food 💩',
+        value: `Post received an average of ${votesAverage}⭐.\n
+        ${votes.length} ${votes.length == 1 ? 'user' : 'users'} voted.`,
+        inline: false,
+      },
+    ],
   };
 
-  let postedFoodMessage = await targetChannel.send(embed);
+
+  let postedFoodMessage = await targetChannel.send({embeds: [embed]});
   await insert({
     url: url,
-    upvotes: upvotes,
-    downvotes: downvotes,
+    averageVote: votesAverage,
     userID: message.author.id,
     discordInline: postedFoodMessage.url,
     username: message.author.username,

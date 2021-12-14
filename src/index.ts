@@ -14,8 +14,9 @@ class MyClient extends AkairoClient {
         ownerID: config.owner,
       },
       {
+        intents: ['GUILDS', 'GUILD_MEMBERS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS', 'GUILD_MESSAGE_TYPING', 'GUILD_BANS', 'GUILD_EMOJIS_AND_STICKERS','GUILD_WEBHOOKS', 'DIRECT_MESSAGES', 'DIRECT_MESSAGE_REACTIONS', 'DIRECT_MESSAGE_TYPING' ],
         partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
-        disableMentions: 'everyone',
+        allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
       }
     );
 

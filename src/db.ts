@@ -1,19 +1,17 @@
 import { AkairoClient } from 'discord-akairo';
-import { User } from 'discord.js';
+import { Snowflake, User } from 'discord.js';
 import { MongoClient } from 'mongodb';
 import { config } from './config';
 import { COLLECTIONS, DBNAME, FOODTYPE } from './enums';
-import { foodObject, pendingFood, guildSettings } from './typings';
+import { foodObject, pendingFood, guildSettings, vote } from './typings';
 
 export async function insert(foodObject: foodObject) {
   const mongo = await MongoClient.connect(config.mongo_url);
   console.log('Mongo Connected');
 
   const foodDB = mongo.db('food');
-  foodObject.upvotes -= 1;
-  foodObject.downvotes -= 1;
   const collection =
-    foodObject.upvotes > foodObject.downvotes
+    foodObject.averageVote >= 3.5
       ? foodDB.collection('foodPorn')
       : foodDB.collection('foodHell');
   await collection.insertOne(foodObject);
@@ -22,50 +20,50 @@ export async function insert(foodObject: foodObject) {
   await mongo.close();
 }
 
-// Find Logic For Mongo Food DB
-export async function findFood(
-  foodType: FOODTYPE,
-  guildID: string,
-  userID?: string
-) {
-  let foodArray: foodObject[] = [];
-  const mongo = await MongoClient.connect(config.mongo_url);
-  console.log('Mongo Connected - Find Food');
-  const foodDB = mongo.db(DBNAME.FOOD);
-  let query = userID
-    ? { userID: userID, guildID: guildID }
-    : { guildID: guildID };
-  console.log('MONGO FOODTYPE', foodType);
-  if (foodType == FOODTYPE.HELL || foodType === FOODTYPE.ALL) {
-    console.log('TRYING TO QUERY FOODHELL');
-    let foodCollection = foodDB.collection(COLLECTIONS.HELL);
-    let foodCursor = foodCollection.find(query);
-    foodArray = foodArray.concat(await foodCursor.toArray());
-    foodArray.sort((a, b) => {
-      return b.downvotes - a.downvotes;
-    });
-  }
+// // Find Logic For Mongo Food DB
+// export async function findFood(
+//   foodType: FOODTYPE,
+//   guildID: string,
+//   userID?: string
+// ) {
+//   let foodArray: foodObject[] = [];
+//   const mongo = await MongoClient.connect(config.mongo_url);
+//   console.log('Mongo Connected - Find Food');
+//   const foodDB = mongo.db(DBNAME.FOOD);
+//   let query = userID
+//     ? { userID: userID, guildID: guildID }
+//     : { guildID: guildID };
+//   console.log('MONGO FOODTYPE', foodType);
+//   if (foodType == FOODTYPE.HELL || foodType === FOODTYPE.ALL) {
+//     console.log('TRYING TO QUERY FOODHELL');
+//     let foodCollection = foodDB.collection(COLLECTIONS.HELL);
+//     let foodCursor = foodCollection.find(query);
+//     foodArray = foodArray.concat(await foodCursor.toArray());
+//     foodArray.sort((a, b) => {
+//       return b.downvotes - a.downvotes;
+//     });
+//   }
 
-  if (foodType == FOODTYPE.PORN || foodType === FOODTYPE.ALL) {
-    console.log('TRYING TO QUERY FOODPORN');
-    let foodCollection = foodDB.collection(COLLECTIONS.PORN);
-    let foodCursor = foodCollection.find(query);
-    foodArray = foodArray.concat(await foodCursor.toArray());
-    foodArray.sort((a, b) => {
-      return b.upvotes - a.upvotes;
-    });
-  }
-  foodArray.forEach((food) => {
-    console.log('FOOD:', food.url);
-  });
-  await mongo.close();
-  //if (foodArray.length === 0) return foodArray;
-  foodArray.map((food, index) => {
-    // Add the iterator index to the food object so that pagination embed can display it
-    food.index = index;
-  });
-  return foodArray;
-}
+//   if (foodType == FOODTYPE.PORN || foodType === FOODTYPE.ALL) {
+//     console.log('TRYING TO QUERY FOODPORN');
+//     let foodCollection = foodDB.collection(COLLECTIONS.PORN);
+//     let foodCursor = foodCollection.find(query);
+//     foodArray = foodArray.concat(await foodCursor.toArray());
+//     foodArray.sort((a, b) => {
+//       return b.upvotes - a.upvotes;
+//     });
+//   }
+//   foodArray.forEach((food) => {
+//     console.log('FOOD:', food.url);
+//   });
+//   await mongo.close();
+//   //if (foodArray.length === 0) return foodArray;
+//   foodArray.map((food, index) => {
+//     // Add the iterator index to the food object so that pagination embed can display it
+//     food.index = index;
+//   });
+//   return foodArray;
+// }
 
 export async function foodExists(collectionName: COLLECTIONS, url: string) {
   const mongo = await MongoClient.connect(config.mongo_url);
@@ -106,8 +104,8 @@ export async function insertPending(messageID: string, guildID: string) {
     messageID: messageID,
     postTime: postTime,
     guildID: guildID,
+    votes: []
   };
-
   const foodDB = mongo.db('food');
   const collection = foodDB.collection(COLLECTIONS.PENDING);
   await collection.insertOne(pendingFood);
@@ -135,6 +133,32 @@ export async function pendingDelete(messageID: string) {
   const result = await collection.deleteMany(query);
   console.log(`Deleted ${result.deletedCount} posts from pending collection`);
   await mongo.close();
+}
+
+export async function pendingVoterPush(messageID: Snowflake, vote: vote) {
+  const mongo = await MongoClient.connect(config.mongo_url);
+  console.log('Mongo Connected - Update Pending');
+  const foodDB = mongo.db('food');
+  const collection = foodDB.collection(COLLECTIONS.PENDING);
+  const query = { messageID: messageID };
+  const push = { $push: { votes: vote} };
+  const result = await collection.updateOne(query, push);
+  console.log(
+    `Added vote ${vote.vote} from ${vote.user} to ${messageID}'s voters array`
+  );
+  await mongo.close();
+}
+
+export async function getPendingVoters(messageID: Snowflake) {
+  const mongo = await MongoClient.connect(config.mongo_url);
+  console.log('Mongo Connected - Get Pending Voters');
+  const foodDB = mongo.db('food');
+  const collection = foodDB.collection(COLLECTIONS.PENDING);
+  const query = { messageID: messageID };
+  const cursor = collection.find(query);
+  const pendingFood: pendingFood[] = await cursor.toArray();
+  await mongo.close();
+  return pendingFood[0].votes;
 }
 
 export async function guildInit(guildSettings: guildSettings) {

@@ -1,5 +1,5 @@
 import { Command } from 'discord-akairo';
-import { Message } from 'discord.js';
+import { Message, WebhookClient } from 'discord.js';
 import { TextChannel } from 'discord.js';
 import { User } from 'discord.js';
 import { ObjectID } from 'mongodb';
@@ -55,9 +55,14 @@ class InitCommand extends Command {
     const pornChannel = args.pornChannel;
     const hellChannel = args.hellChannel;
 
+    let webhook = await submissionsChannel.createWebhook('Food Submissions')
+    const webhookClient = new WebhookClient(webhook);
+
     const guildSettings: guildSettings = {
       _id: new ObjectID(),
       prefix: '.',
+      webhookID: webhook.id,
+      webhookToken: webhook.token,
       guildID: message.guild.id,
       submissionID: submissionsChannel.id,
       pornID: pornChannel.id,

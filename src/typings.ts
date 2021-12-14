@@ -1,3 +1,4 @@
+import { Snowflake, User } from 'discord.js';
 import { ObjectID } from 'mongodb';
 
 declare module 'discord-akairo' {
@@ -16,8 +17,7 @@ export interface pendingChecker {
 }
 export interface foodObject {
   url: string;
-  upvotes: number;
-  downvotes: number;
+  averageVote: number;
   userID: string;
   discordInline: string;
   username: string;
@@ -25,14 +25,21 @@ export interface foodObject {
   guildID: string;
   _id: ObjectID;
 }
+export interface vote {
+  user: Snowflake;
+  vote: number;
+}
 export interface pendingFood {
   messageID: string;
   guildID: string;
   postTime: Date;
+  votes: vote[];
 }
 export interface guildSettings {
   _id: ObjectID;
   prefix: string;
+  webhookID: string;
+  webhookToken: string;
   guildID: string;
   submissionID: string;
   pornID: string;

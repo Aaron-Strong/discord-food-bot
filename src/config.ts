@@ -17,7 +17,7 @@ export const config: Config = {
   mongo_url: process.env.mongo_url, // mongoDB connection url
   prefix: process.env.prefix || '.', // command prefix
   admins: ['162908463561834496', '166965009186816001', '210531463932674050'], // server admins account IDs
-  voteTimeInMinutes: 180,
+  voteTimeInMinutes: 60 * 6, // 6 hours
   azureBlob: {
     connectionString: process.env.azureBlobConnectionString,
     containerName: process.env.azureBlobContainerName,

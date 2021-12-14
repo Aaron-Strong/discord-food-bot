@@ -1,6 +1,6 @@
 import { Category } from 'discord-akairo';
 import { Command } from 'discord-akairo';
-import { Message } from 'discord.js';
+import { Message, MessageActionRow, MessageButton, TextChannel } from 'discord.js';
 import { MessageEmbed } from 'discord.js';
 import { config } from '../config';
 const ignoredCategories = ['owner', 'default', 'auto'];
@@ -61,7 +61,8 @@ export default class Help extends Command {
             .join('`, `')}\``
         );
       }
-      return message.channel.send(embed);
+      const channel = message.channel as TextChannel;
+      return channel.send({embeds: [embed]});
     }
     embed.setTitle('Commands').setDescription(
       `
@@ -87,7 +88,10 @@ export default class Help extends Command {
           .join(', ')}`
       );
     }
+ 
+  
+    const channel = message.channel as TextChannel;
 
-    return message.channel.send(embed);
+    return channel.send({embeds: [embed]});
   }
 }
