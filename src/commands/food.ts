@@ -111,12 +111,13 @@ class FoodCommand extends Command {
         interaction.reply({ content: "You already voted!", ephemeral: true });
       else {
         await pendingVoterPush(botMessage.id, { user: interaction.member.user.id, vote: parseInt(interaction.customId.split('_')[1]) });
+
+        votes = await getPendingVoters(botMessage.id);
         let average = parseFloat((votes.reduce((a, b) => a + b.vote, 0) / votes.length).toPrecision(2));
         if (isNaN(average)) {
           average = 0;
         }
         interaction.reply({ content: `Successfully Voted!\n${votes.length} ${votes.length == 1 ? 'person has' : 'people have'} voted. The average rating is ${average}`, ephemeral: true });
-        votes = await getPendingVoters(botMessage.id);
       }
     });
     return true;
