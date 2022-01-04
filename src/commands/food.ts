@@ -96,7 +96,7 @@ class FoodCommand extends Command {
     let votes = await getPendingVoters(botMessage.id);
     collector.on('collect', async interaction => {
       if (interaction.customId == '???') {
-        if (votes.some(vote => vote.user === interaction.user.id)){
+        if (votes.some(vote => vote.user === interaction.user.id)) {
           let average = parseFloat((votes.reduce((a, b) => a + b.vote, 0) / votes.length).toPrecision(2));
           if (isNaN(average)) {
             average = 0;
@@ -104,14 +104,18 @@ class FoodCommand extends Command {
           interaction.reply({ content: `${votes.length} ${votes.length == 1 ? 'person has' : 'people have'} voted. The average rating is ${average}`, ephemeral: true });
         }
         else {
-          interaction.reply({content: `You have to vote before seeing the results!`, ephemeral: true});
+          interaction.reply({ content: `You have to vote before seeing the results!`, ephemeral: true });
         }
       }
       else if (votes.some(vote => vote.user === interaction.member.user.id))
         interaction.reply({ content: "You already voted!", ephemeral: true });
       else {
         await pendingVoterPush(botMessage.id, { user: interaction.member.user.id, vote: parseInt(interaction.customId.split('_')[1]) });
-        interaction.reply({ content: `Successfully Voted!`, ephemeral: true });
+        let average = parseFloat((votes.reduce((a, b) => a + b.vote, 0) / votes.length).toPrecision(2));
+        if (isNaN(average)) {
+          average = 0;
+        }
+        interaction.reply({ content: `Successfully Voted!\n${votes.length} ${votes.length == 1 ? 'person has' : 'people have'} voted. The average rating is ${average}`, ephemeral: true });
         votes = await getPendingVoters(botMessage.id);
       }
     });
