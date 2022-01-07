@@ -45,11 +45,11 @@ export async function postFood(
   let votes = await getPendingVoters(messageID);
   let votesAverage = ((votes.reduce((a, b) => a + b.vote, 0) / votes.length).toPrecision(2) || 0) as number;
   let poggers = false;
-  if(votesAverage >= 3.5) { 
+  if (votesAverage >= 3.5) {
     poggers = true;
-    targetChannel = foodPornChannel; 
+    targetChannel = foodPornChannel;
   }
-  else 
+  else
     targetChannel = foodHellChannel;
   let url: string = '';
   if (message.attachments.size != 0) {
@@ -77,16 +77,18 @@ export async function postFood(
     fields: [
       {
         name:
-        poggers ? '🥳 Foodporn Poggers!' : '💩 Shitty Food 💩',
+          poggers ? '🥳 Foodporn Poggers!' : '💩 Shitty Food 💩',
         value: `Post received an average of ${votesAverage}⭐.\n
-        ${votes.length} ${votes.length == 1 ? 'user' : 'users'} voted.`,
+        ${votes.length} ${votes.length == 1 ? 'user' : 'users'} voted.\n
+        NFT ID: "${messageID}" minted successfully.\n
+        Thank you for your contribution!`,
         inline: false,
       },
     ],
   };
 
 
-  let postedFoodMessage = await targetChannel.send({embeds: [embed]});
+  let postedFoodMessage = await targetChannel.send({ embeds: [embed] });
   await insert({
     url: url,
     averageVote: votesAverage,
