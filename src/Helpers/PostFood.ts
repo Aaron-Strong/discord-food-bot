@@ -45,7 +45,9 @@ export async function postFood(
   let votes = await getPendingVoters(messageID);
   let votesAverage = ((votes.reduce((a, b) => a + b.vote, 0) / votes.length).toPrecision(2) || 0) as number;
   let poggers = false;
-  if (votesAverage >= 3.5) {
+  let minimumVote = 3.5;
+  if(message.guild.id == '135846402713452545') minimumVote = 2.5; // LAZY PATCH
+  if (votesAverage >= minimumVote) {
     poggers = true;
     targetChannel = foodPornChannel;
   }
